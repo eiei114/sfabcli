@@ -2,13 +2,24 @@
 name = "sfabcli"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.99"
+# Let-chains need 1.88; edition 2024 needs 1.85.
+rust-version = "1.88"
 description = "CLI for Sketchfab that borrows your logged-in Chrome over CDP"
 license = "MIT"
 repository = "https://github.com/eiei114/sfabcli"
 readme = "README.md"
-keywords = ["sketchfab", "3d-assets", "cli", "cdp"]
-categories = ["command-line-utilities"]
+authors = ["eiei114"]
+keywords = ["sketchfab", "3d-assets", "cli", "cdp", "models"]
+categories = ["command-line-utilities", "development-tools"]
+publish = ["crates-io"]
+# Publish reviewed source and docs only, never local downloads or browser state.
+include = [
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "LICENSE",
+    "src/**",
+]
 
 [[bin]]
 name = "sfab"
