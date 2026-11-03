@@ -32,14 +32,15 @@ ATTRIBUTION REQUIRED: "Barrel" by DZs (https://sketchfab.com/3d-models/...) — 
 
 ## Requirements
 
-- Rust 1.85+ to build (edition 2024); the binary is self-contained
+- Rust 1.89+ to build; the binary is self-contained
 - A Chrome instance started with `--remote-debugging-port` and logged in to Sketchfab
 
 ## Install
 
 ```console
+cargo install sfabcli   # installs the `sfab` binary
+# or, from a checkout
 cargo install --path .
-# or
 cargo build --release   # target/release/sfab
 ```
 

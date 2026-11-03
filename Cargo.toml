@@ -2,8 +2,8 @@
 name = "sfabcli"
 version = "0.1.0"
 edition = "2024"
-# Let-chains need 1.88; edition 2024 needs 1.85.
-rust-version = "1.88"
+# Verified floor: a transitive dependency (aes, via zip) needs 1.89.
+rust-version = "1.89"
 description = "CLI for Sketchfab that borrows your logged-in Chrome over CDP"
 license = "MIT"
 repository = "https://github.com/eiei114/sfabcli"
