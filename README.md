@@ -1,45 +1,46 @@
 # sfabcli
 
-`sfab` is a small CLI for [Sketchfab](https://sketchfab.com/) that reuses an already logged-in Chrome
-over the DevTools protocol, then calls Sketchfab's own web API from inside the page. No OAuth token,
-no headless login flow, no cookie storage: it borrows your browser session and never prints cookies.
+`sfab` is a small Rust CLI for [Sketchfab](https://sketchfab.com/). It reuses an already logged-in
+Chrome over the DevTools protocol, then calls Sketchfab's own web API from inside the page. No OAuth
+token, no headless login flow, no cookie storage: it borrows your browser session and never prints
+cookies.
 
 Same approach as [fabcli](https://github.com/eiei114/fabcli); the two share one resident Chrome
 profile.
 
 ```console
 $ sfab status
-ok: Keisu（pro・ログイン済み）
+ok: Eisuke114 (basic, signed in)
 
-$ sfab search "wooden barrel" --details --license cc0 --limit 5
-1a2b...  cc0 · gltf · 12400f  Wooden Barrel  — someone
+$ sfab search barrel --details --license by --limit 3
+1f088de099d24cea9d8bba2a3d067403  by · free  Fishhook barrel cactus  — Graphic solutions
 
-$ sfab plan <uid> --format glb
+$ sfab plan ef2024160ce640558614d2d34d1e3c47 --format glb
 {
- "format": "glb",
- "textureMaxResolution": 1024,
- "sizeMB": "6.4MB",
- "license": { "slug": "cc0", "free": true },
- "attributionRequired": false
+  "format": "glb",
+  "textureMaxResolution": 1024,
+  "sizeMB": "3.5MB",
+  "license": { "slug": "by", "needsAttribution": true },
+  "attributionRequired": true
 }
 
-$ sfab download <uid> --format glb --out ./barrel --unzip
-saved ./barrel/Wooden_Barrel.glb (6.4MB)
-record ./barrel/SFAB_SOURCE_1a2b3c4d.json
+$ sfab download ef2024160ce640558614d2d34d1e3c47 --format glb --out ./barrel
+saved ./barrel/Barrel.glb (3.5MB)
+record ./barrel/SFAB_SOURCE_ef202416.json
+ATTRIBUTION REQUIRED: "Barrel" by DZs (https://sketchfab.com/3d-models/...) — CC Attribution
 ```
 
 ## Requirements
 
-- Node.js 22+ (uses the built-in `fetch` and `WebSocket` globals)
+- Rust 1.85+ to build (edition 2024); the binary is self-contained
 - A Chrome instance started with `--remote-debugging-port` and logged in to Sketchfab
-- `curl` (downloading) and `unzip` (only with `--unzip`)
 
 ## Install
 
 ```console
-git clone https://github.com/eiei114/sfabcli
-cd sfabcli
-npm link        # or: export PATH="$PWD:$PATH"
+cargo install --path .
+# or
+cargo build --release   # target/release/sfab
 ```
 
 The default CDP endpoint is `http://127.0.0.1:9223`; override it with `SFAB_CDP`.
@@ -54,25 +55,36 @@ The default CDP endpoint is `http://127.0.0.1:9223`; override it with `SFAB_CDP`
 | `sfab show <uid\|url>` | license, download type, face/vertex counts, textures, AI flag |
 | `sfab plan <uid\|url> [--format glb\|gltf\|source\|usdz] [--tex 1024\|2048\|4096]` | print the download plan without downloading |
 | `sfab archive-types <uid\|url>` | every format and texture variant with sizes |
-| `sfab download <uid\|url> [--format ...] [--tex ...] [--out DIR] [--unzip] [--only NAME]` | download |
+| `sfab download <uid\|url> [--format ...] [--tex ...] [--out DIR] [--unzip]` | download |
 
 Downloadable formats are glTF, GLB, USDZ and source archives. Sketchfab does not publish standalone
 FBX or OBJ.
 
+Each download writes `SFAB_SOURCE_<uid8>.json` with the author, profile URL, license slug, label,
+requirements, attribution flag, AI flag, format and size. When attribution is required the exact
+credit line is printed.
+
 ## Notes and caveats
 
 - **`--license` needs `--details`.** Search results do not carry license data, so filtering happens
-  client-side after an N+1 detail fetch; the command refuses to filter without it.
-- The `/i/search` `license` query parameter does not work (measured), so filtering is local.
+  after one detail request per result; the command refuses to filter without it.
+- The `/i/search` `license` query parameter does nothing (measured), so filtering is local.
 - When several texture resolutions exist, the default pick is the **smallest** — a 4K set is rarely
   wanted for game import. Use `--tex` to override.
-- `--only NAME` selects by filename suffix from a source archive.
-- Each download writes `SFAB_SOURCE_<uid8>.json` with author, profile URL, license slug, label,
-  requirements, attribution flag, AI flag, format and size. When attribution is required the exact
-  credit line is printed.
-- Treat third-party archives as untrusted input: check CRCs, path traversal and expanded size before
-  extracting. `--unzip` uses plain `unzip`.
+- A model with `downloadType: notDownloadable`, or one whose download endpoint returns 403, is
+  refused with the author's reason rather than a silent failure.
+- Treat third-party archives as untrusted input. Extraction sanitises entry names, so an entry
+  cannot escape the destination, but check the contents before use.
 - Sketchfab's web API is undocumented and may change without notice.
+
+## Development
+
+```console
+cargo test      # unit tests, no network
+cargo clippy --all-targets
+```
+
+The CDP session is only exercised by hand, since it needs a logged-in browser.
 
 ## See also
 
