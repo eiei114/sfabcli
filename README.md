@@ -74,6 +74,10 @@ FBX or OBJ.
   extracting. `--unzip` uses plain `unzip`.
 - Sketchfab's web API is undocumented and may change without notice.
 
+## See also
+
+- [fabcli](https://github.com/eiei114/fabcli) — the same approach for the Fab marketplace
+
 ## License
 
 MIT
